@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Flume.Dao.MetricStatDao">
+	<select id="selectALL" resultType="MetricStat">
+		SELECT
+		* 
+		FROM 
+		(SELECT * FROM METRIC_STAT ORDER BY check_time DESC) 
+		AS t 
+		GROUP BY host_name,flow_num;
+
+	</select>
+	<insert id="insertSTAT" parameterType="java.util.Map" >
+        INSERT INTO METRIC_STAT(host_name,flow_num,check_time,status<if test="status!='d'">,start_time,ch_diff,snk_diff,ch_fill_percentage,ch_event,snk_event</if>) 
+        VALUES
+        <foreach collection="list" item="stat" separator=" , ">
+        (#{stat.host_name}
+        ,#{stat.flow_num}
+        ,now()
+        ,#{stat.status}
+        <if test="status!='d'">
+        ,#{stat.start_time}
+        ,#{stat.ch_diff}
+        ,#{stat.snk_diff}
+        ,#{stat.ch_fill_percentage}
+        ,#{stat.ch_event}
+        ,#{stat.snk_event}
+        </if>
+        )
+        </foreach>
+    </insert>
+    <select id="selectDiff" parameterType="hashmap" resultType="hashmap">
+    SELECT 
+    ch_diff,snk_diff,ch_event,snk_event
+    FROM
+    METRIC_STAT
+    WHERE host_name=#{host_name} AND flow_num=#{flow_num}
+    ORDER BY check_time DESC 
+    LIMIT 1;
+    </select>
+</mapper>
